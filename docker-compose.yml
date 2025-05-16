@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  ocean-plotter:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - plot-cache:/app/static/plots
+    environment:
+      - CACHE_EXPIRE_DAYS=7
+      - PYTHONUNBUFFERED=1
+      - GUNICORN_WORKERS=4
+      - GUNICORN_TIMEOUT=120
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+
+volumes:
+  plot-cache:
+  redis_data:
