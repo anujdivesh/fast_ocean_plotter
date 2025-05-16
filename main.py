@@ -1,5 +1,5 @@
 from typing import Union
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, APIRouter
 from fastapi.responses import JSONResponse, StreamingResponse
 import io
 import matplotlib.pyplot as plt  # Correct import
@@ -14,8 +14,8 @@ from datetime import datetime
 import os
 from datetime import datetime, timedelta
 
+ocean_router = APIRouter(prefix="/plotter")
 
-app = FastAPI()
 
 # Configuration
 CACHE_DIR = Path("static/plots")
@@ -23,12 +23,12 @@ CACHE_DIR.mkdir(exist_ok=True)
 CACHE_EXPIRE_DAYS = 7
 
 
-@app.get("/")
+@ocean_router.get("/")
 def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/oceanplotter")
+@ocean_router.get("/oceanplotter")
 async def generate_plot_ocean(
     request: Request,
     region: int = 1,
@@ -205,7 +205,7 @@ async def generate_plot_ocean(
 
 
 
-@app.get("/plot")
+@ocean_router.get("/plot")
 async def generate_plot(
     request: Request,
     amplitude: float = 1.0,
@@ -235,3 +235,8 @@ async def generate_plot(
         plt.close()  # Important: free memory
         buf.seek(0)
         return StreamingResponse(buf, media_type="image/png")
+
+
+app = FastAPI()
+# Include the router
+app.include_router(ocean_router)
